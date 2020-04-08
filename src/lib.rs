@@ -3,16 +3,22 @@ pub mod binary_matrix_encryption {
     use std::io::BufReader;
     use std::io::prelude::*;
     
-    // pub struct SplitedCharacter {
-    //     heavyweight_bits: u8,
-    //     lightweight_bits: u8
-    // }
+    pub struct SplitedCharacter {
+        pub heavyweight_bits: u8,
+        pub lightweight_bits: u8
+    }
 
-    // impl SplitedCharacter {
-    //     pub fn encrypt_character() {
+    impl SplitedCharacter {
+        pub fn split_character(&mut self, character: char) {
+            self.heavyweight_bits = character as u8 & 0b11110000;
+            self.lightweight_bits = character as u8 & 0b00001111;
+        }
 
-    //     } 
-    // }
+        pub fn split_number(&mut self, character: u8) {
+            self.heavyweight_bits = character & 0b11110000;
+            self.lightweight_bits = character & 0b00001111;
+        } 
+    }
 
     pub fn read_file(filename: String) -> String {
         let file = File::open(filename).unwrap();
@@ -42,8 +48,6 @@ pub mod binary_matrix_encryption {
             result *= 2;
         }
 
-        println!("Fucking result: {}", result);
-
         return result;
     }
 
@@ -63,7 +67,6 @@ pub mod binary_matrix_encryption {
             .rev()
             .enumerate()
             .filter(|(_i, character)| character.to_digit(2).unwrap() == 1)
-            .inspect(|(i, _x)| println!("Current iteration number: {}", i))
             .fold(0, |acc, (i, _x)| acc + compute_binary_value(i  as u8));
 
         return Ok(number_convertion);
@@ -172,5 +175,21 @@ mod tests {
     fn binary_string_to_number_full() {
         let test_value = crate::binary_matrix_encryption::binary_string_to_number(String::from("11111111")).unwrap();
         assert_eq!(test_value, 255);
+    }
+
+    #[test]
+    fn splited_character_split_character_test() {
+        let mut character = crate::binary_matrix_encryption::SplitedCharacter{heavyweight_bits: 0, lightweight_bits: 0};
+        character.split_character('a');
+        assert_eq!(character.heavyweight_bits, 96);
+        assert_eq!(character.lightweight_bits, 1);
+    }
+
+    #[test]
+    fn splited_character_split_number_test() {
+        let mut character = crate::binary_matrix_encryption::SplitedCharacter{heavyweight_bits: 0, lightweight_bits: 0};
+        character.split_number(97);
+        assert_eq!(character.heavyweight_bits, 96);
+        assert_eq!(character.lightweight_bits, 1);
     }
 }
