@@ -21,7 +21,7 @@ jobs:
       run: cargo build
 
     - name: Test with coverage
-      run: cargo tarpaulin --out Lcov --output-dir .coverage
+      run: cargo tarpaulin --out Lcov --output-dir ./coverage
 
     - name: Coveralls
       uses: coverallsapp/github-action@master
