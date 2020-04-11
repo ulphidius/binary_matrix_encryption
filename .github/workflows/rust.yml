@@ -19,6 +19,9 @@ jobs:
     
     - name: Run tests
       run: cargo test --verbose
+
+    - name: Run coverage
+      run: cargo cargo-tarpaulin
     
     - name: Coveralls
       uses: coverallsapp/github-action@master
