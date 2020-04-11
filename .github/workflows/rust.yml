@@ -14,11 +14,14 @@ jobs:
     steps:
     - uses: actions/checkout@v2
   
-    - name: Run cargo-tarpaulin
-      uses: actions-rs/tarpaulin@v0.1
-      with:
-        version: '0.12.1'
-        args: '-- --out Lcov --output-dir ./coverage --test-threads 1'
+    - name: Install dependencies
+      run: cargo install cargo-tarpaulin
+    
+    - name: Build
+      run: cargo build
+
+    - name: Test with coverage
+      run: cargo tarpaulin --out Lcov --output-dir .coverage
 
     - name: Coveralls
       uses: coverallsapp/github-action@master
