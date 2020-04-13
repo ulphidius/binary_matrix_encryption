@@ -44,7 +44,7 @@ pub mod binary_matrix_encryption {
 
         let mut result = 2;
 
-        for _i in 1..enumerate_index {
+        for _ in 1..enumerate_index {
             result *= 2;
         }
 
@@ -66,8 +66,8 @@ pub mod binary_matrix_encryption {
         let number_convertion: u8 = binary_string.chars()
             .rev()
             .enumerate()
-            .filter(|(_i, character)| character.to_digit(2).unwrap() == 1)
-            .fold(0, |acc, (i, _x)| acc + compute_binary_value(i  as u8));
+            .filter(|(_, character)| character.to_digit(2).unwrap() == 1)
+            .fold(0, |acc, (i, _)| acc + compute_binary_value(i  as u8));
 
         return Ok(number_convertion);
     }
@@ -101,7 +101,7 @@ pub mod binary_matrix_encryption {
 
         let all_element_are_set = secret_lines.iter()
             .filter(|index_value| **index_value == -1)
-            .fold(true, |acc, _index_value| acc == false);
+            .fold(true, |acc, _| acc == false);
 
         if ! all_element_are_set {
             return Err("The key desn't have a clear sequence of identity lines");
@@ -113,7 +113,7 @@ pub mod binary_matrix_encryption {
     pub fn key_is_well_form(key_matrix: &[&str; 4]) -> bool {
         let good_number_bits = key_matrix.iter()
             .filter(|matrix_line| matrix_line.len() != 8)
-            .fold(true, |acc, _x| acc == false);
+            .fold(true, |acc, _| acc == false);
         
         if ! good_number_bits {
             return false;
