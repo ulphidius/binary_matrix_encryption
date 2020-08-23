@@ -1,17 +1,37 @@
+#[derive(Debug, Clone, Copy)]
 pub struct SplitedCharacter {
-    pub heavyweight_bits: u8,
-    pub lightweight_bits: u8
+    pub heavyweight_bits: Option<u8>,
+    pub lightweight_bits: Option<u8>
 }
 
 impl SplitedCharacter {
-    pub fn split_character(&mut self, character: char) {
-        self.heavyweight_bits = character as u8 & 0b11110000;
-        self.lightweight_bits = character as u8 & 0b00001111;
+    pub fn new() -> Self {
+        return Self {
+            heavyweight_bits: None,
+            lightweight_bits: None
+        }; 
     }
 
-    pub fn split_number(&mut self, character: u8) {
-        self.heavyweight_bits = character & 0b11110000;
-        self.lightweight_bits = character & 0b00001111;
+    pub fn from_character(character: &char) -> Self {
+        return Self {
+            heavyweight_bits: Some(*character as u8 & 0b11110000),
+            lightweight_bits: Some(*character as u8 & 0b00001111)
+        };
+    }
+
+    pub fn from_number(character: &u8) -> Self {
+        return Self {
+            heavyweight_bits: Some(*character & 0b11110000),
+            lightweight_bits: Some(*character & 0b00001111)
+        } 
+    }
+
+    pub fn get_value(self) -> Option<char> {
+        if self.heavyweight_bits.is_none() || self.lightweight_bits.is_none() {
+            return None;
+        }
+
+        return Some((self.heavyweight_bits.unwrap() + self.lightweight_bits.unwrap()) as char)
     }
 }
 
@@ -124,18 +144,25 @@ mod test {
     }
     
     #[test]
-    fn splited_character_split_character_test() {
-        let mut character = SplitedCharacter{heavyweight_bits: 0, lightweight_bits: 0};
-        character.split_character('a');
-        assert_eq!(character.heavyweight_bits, 96);
-        assert_eq!(character.lightweight_bits, 1);
+    fn splited_character_from_character_test() {
+        let character = SplitedCharacter::from_character(&'a');
+
+        assert_eq!(character.heavyweight_bits.unwrap(), 96);
+        assert_eq!(character.lightweight_bits.unwrap(), 1);
     }
     
     #[test]
-    fn splited_character_split_number_test() {
-        let mut character = SplitedCharacter{heavyweight_bits: 0, lightweight_bits: 0};
-        character.split_number(97);
-        assert_eq!(character.heavyweight_bits, 96);
-        assert_eq!(character.lightweight_bits, 1);
+    fn splited_character_from_number_test() {
+        let character = SplitedCharacter::from_number(&9);
+
+        assert_eq!(character.heavyweight_bits.unwrap(), 0);
+        assert_eq!(character.lightweight_bits.unwrap(), 9);
+    }
+
+    #[test]
+    fn splited_character_get_value() {
+        let character = SplitedCharacter::from_character(&'b');
+
+        assert_eq!(character.get_value().unwrap(), 'b');
     }
 }
