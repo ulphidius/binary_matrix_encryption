@@ -2,6 +2,46 @@ use std::fs::File;
 use std::io::BufReader;
 use std::io::prelude::Read;
 
+fn key_file_is_well_form(key_file_content: &String) -> bool {
+    let file_size: usize = 41;
+
+    if key_file_content.len() != file_size {
+        return false;
+    }
+
+    let mut key_file_specific_formation: Vec<char> = key_file_content.chars()
+        .enumerate()
+        .filter(|(index, _)| index < &5)
+        .map(|(_, character)| character.clone())
+        .collect();
+    
+    key_file_specific_formation.push(key_file_content.chars().last().unwrap());
+
+    if key_file_specific_formation.into_iter().collect::<String>() != "G4C=[]" {
+        return false;    
+    }
+
+    return true;
+}
+
+pub fn read_key(filename: &str) -> Result<String, &'static str> {
+    let file = File::open(filename).unwrap();
+    let mut content = String::new();
+    let mut buf_reader = BufReader::new(file);
+    
+    buf_reader.read_to_string(&mut content).unwrap();
+
+    if ! key_file_is_well_form(&content) {
+        return Err("The key isn't well form");
+    }
+    
+    let filtered_result: String = content.chars()
+        .filter(|character| ! character.is_digit(2))
+        .collect();
+
+    return Ok(filtered_result);
+}
+
 pub fn read_file(filename: &str) -> String {
     let file = File::open(filename).unwrap();
     let mut buf_reader = BufReader::new(file);
@@ -50,21 +90,18 @@ pub fn get_secret_key_index(key_matrix: &[&str; 4]) -> Result<[i8; 4], &'static 
 }
 
 pub fn key_is_well_form(key_matrix: &[&str; 4]) -> bool {
-    let good_number_bits = key_matrix.iter()
-        .filter(|matrix_line| matrix_line.len() != 8)
-        .fold(true, |acc, _| acc == false);
-    
-    if ! good_number_bits {
-        return false;
-    }
-
-    for matrix_line in key_matrix {
-        for character in matrix_line.chars() {
-            if ! character.is_digit(2) {
-                return false;
-            }
+    for bits_string in key_matrix {
+        if bits_string.len() != 8 {
+            return false;
         }
+
+        let is_binary_string = bits_string.chars()
+            .filter(|character| character.is_digit(2))
+            .fold(true, |acc, _| acc == false);
         
+        if ! is_binary_string {
+            return false;
+        }
     }
 
     return true;
@@ -99,7 +136,7 @@ mod test {
 
     #[test]
     fn read_file_test() {
-        let test_value: String = read_file("test.txt");
+        let test_value: String = read_file("./testing_file/file_with_text.txt");
         assert_eq!(test_value, "coucou");
     }
 
@@ -117,7 +154,8 @@ mod test {
 
     #[test]
     fn get_secret_key_index_test() {
-        let matrix_test = ["11011000", 
+        let matrix_test = [
+            "11011000", 
             "11001011", 
             "10001110", 
             "10100000"
@@ -131,7 +169,8 @@ mod test {
     #[test]
     #[should_panic]
     fn get_secret_key_index_invalid_key_syntax() {
-        let matrix_test = ["11011000", 
+        let matrix_test = [
+            "11011000", 
             "11001011", 
             "chocolatine", 
             "10100000"
@@ -143,7 +182,8 @@ mod test {
     #[test]
     #[should_panic]
     fn get_secret_key_index_no_secret_found() {
-        let matrix_test = ["11011000", 
+        let matrix_test = [
+            "11011000", 
             "11001011", 
             "10001111", 
             "10100000"
@@ -154,7 +194,8 @@ mod test {
 
     #[test]
     fn key_is_well_form_test() {
-        let matrix_test = ["11011000", 
+        let matrix_test = [
+            "11011000", 
             "11001011", 
             "10001110", 
             "10100000"
@@ -164,7 +205,8 @@ mod test {
 
     #[test]
     fn key_is_well_form_not_good_number_of_bits() {
-        let matrix_test = ["11011000", 
+        let matrix_test = [
+            "11011000", 
             "11001011", 
             "1000111",
             "10100000"
@@ -174,7 +216,8 @@ mod test {
 
     #[test]
     fn key_is_well_form_not_binary_string() {
-        let matrix_test = ["11011000", 
+        let matrix_test = [
+            "11011000", 
             "michelfo", 
             "1000111",
             "1010000"
@@ -210,5 +253,53 @@ mod test {
     fn check_secret_lines_not_key_line() {
         let test_value = check_secret_lines(['1', '1', '0', '0']);
         assert_eq!(test_value, None);
+    }
+
+    #[test]
+    fn key_file_is_well_form_test() {
+        let key_string = String::from("G4C=[11011000 11001011 10001110 10100000]");
+        assert_eq!(key_file_is_well_form(&key_string), true);
+    }
+
+    #[test]
+    fn key_file_is_well_form_bad_header() {
+        let key_string = String::from("G3C=[10101010 10101010 10101010 10101010]");
+        assert_eq!(key_file_is_well_form(&key_string), false);
+    }
+
+    #[test]
+    fn key_file_is_well_form_missing_closure_character() {
+        let key_string = String::from("G4C=[10101010 10101010 10101010 10101010");
+        assert_eq!(key_file_is_well_form(&key_string), false);
+    }
+
+    #[test]
+    fn key_file_is_well_form_bad_number_of_characters() {
+        let key_string = String::from("C=[10101010 10101010 10101010 10101010]");
+        assert_eq!(key_file_is_well_form(&key_string), false);
+    }
+
+    #[test]
+    fn read_key_test() {
+        let key_string = String::from("G4C=[11011000 11001011 10001110 10100000]");
+        assert_eq!(read_file("./testing_file/well_form_key.key"), key_string);
+    }
+
+    #[test]
+    #[should_panic]
+    fn read_key_bad_header() {
+        read_key("./testing_file/bad_header.key").unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn read_key_missing_closure_character() {
+        read_key("./testing_file/missing_closure_character.key").unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn read_key_bad_number_of_characters() {
+        read_key("./testing_file/bad_number_of_characters.key").unwrap();
     }
 }
